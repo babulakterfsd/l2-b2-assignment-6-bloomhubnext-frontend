@@ -21,10 +21,21 @@
 
 ### live link
 
-- server: http://localhost:5000
-- client: https://bloomhubfrontend.vercel.app
+- server: https://bloomhub-assignment6-backend.vercel.app
+- client: https://bloomhub-assignment6-frontend.vercel.app
 
 ### DEMO LOGIN DETAILS
 
-- email: xpawal@gmail.com
-  password: awal123
+- Manager
+
+  - email:
+  - password:
+
+- Seller
+
+  - email:
+  - password:
+
+- Customer
+  - email:
+  - password:
