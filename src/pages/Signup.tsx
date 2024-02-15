@@ -4,13 +4,15 @@ import {
   useCurrentToken,
 } from '@/redux/features/authSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FieldValues, useForm } from 'react-hook-form';
+import { IoEyeOffOutline, IoEyeOutline } from 'react-icons/io5';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Styles from '../styles/home.module.css';
 
 const Signup = () => {
+  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const { register, handleSubmit } = useForm();
   const [login] = useLoginMutation();
   const [signup] = useSignupMutation();
@@ -25,8 +27,8 @@ const Signup = () => {
   }, [token, navigate]);
 
   const handleSignup = async (signupData: FieldValues) => {
-    const { name, email, password } = signupData;
-    if (!name || !email || !password) {
+    const { name, email, password, role } = signupData;
+    if (!name || !email || !password || !role) {
       toast.error('All fields are required', {
         position: 'top-right',
         icon: '😢',
@@ -76,6 +78,19 @@ const Signup = () => {
     }
   };
 
+  const toggleShowingPassword = () => {
+    const passwordInput = document.getElementById(
+      'password'
+    ) as HTMLInputElement;
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      setIsPasswordVisible(true);
+    } else {
+      passwordInput.type = 'password';
+      setIsPasswordVisible(false);
+    }
+  };
+
   return (
     <div className="grid h-screen grid-cols-12">
       <div
@@ -121,7 +136,7 @@ const Signup = () => {
                   {...register('email')}
                 />
               </div>
-              <div>
+              <div className="relative">
                 <label
                   htmlFor="password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -135,6 +150,32 @@ const Signup = () => {
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white  focus:outline-none"
                   {...register('password')}
                 />
+                <span
+                  className="absolute cursor-pointer top-10 right-3"
+                  onClick={toggleShowingPassword}
+                >
+                  {isPasswordVisible ? <IoEyeOutline /> : <IoEyeOffOutline />}
+                </span>
+              </div>
+              {/* role */}
+              <div className="w-full">
+                <label
+                  htmlFor="role"
+                  className="block mb-2 text-sm font-medium "
+                >
+                  Role
+                </label>
+                <select
+                  id="role"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white  focus:outline-none"
+                  required
+                  {...register('role')}
+                >
+                  <option value="seller" defaultValue="seller">
+                    Seller
+                  </option>
+                  <option value="manager">Manager</option>
+                </select>
               </div>
               <button
                 type="submit"
@@ -145,7 +186,7 @@ const Signup = () => {
               <div className="flex items-center justify-between">
                 <p className="text-sm">Already Registered?</p>
                 <Link to="/login">
-                  <span className="text-sm hover:text-red-300  hover:transition-all duration-300">
+                  <span className="text-sm hover:text-red-300  hover:transition-all duration-300 underline">
                     Go to Login
                   </span>
                 </Link>

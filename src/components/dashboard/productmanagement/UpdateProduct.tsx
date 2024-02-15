@@ -37,7 +37,7 @@ const UpdateProduct = () => {
     mainProduct?.discount
   );
   const shopkeeper = useAppSelector(useCurrentShopkeeper);
-  const { _id, email } = shopkeeper as TShopkeeper;
+  const { _id, email, role } = shopkeeper as TShopkeeper;
   const [updateProduct] = useUpdateProductMutation();
   const navigate = useNavigate();
 
@@ -78,6 +78,16 @@ const UpdateProduct = () => {
 
   const handleUpdateProduct = async (e: any) => {
     e.preventDefault();
+
+    if (role !== 'manager') {
+      toast.error('Only managers can update a product', {
+        position: 'top-right',
+        duration: 2500,
+      });
+      navigate('/dashboard');
+      return;
+    }
+
     const productData = {
       id: mainProduct?._id,
       name,

@@ -37,7 +37,7 @@ const CreateVariant = () => {
     mainProduct?.discount
   );
   const shopkeeper = useAppSelector(useCurrentShopkeeper);
-  const { _id, email } = shopkeeper as TShopkeeper;
+  const { _id, email, role } = shopkeeper as TShopkeeper;
   const [createProduct] = useCreateProductMutation();
   const navigate = useNavigate();
 
@@ -78,6 +78,19 @@ const CreateVariant = () => {
 
   const handleAddProduct = async (e: any) => {
     e.preventDefault();
+
+    if (role !== 'manager') {
+      toast.error(
+        'You are not authorized to create variant, only managers can do this.',
+        {
+          position: 'top-right',
+          duration: 2500,
+        }
+      );
+      navigate('/dashboard');
+      return;
+    }
+
     const productData = {
       name,
       price: Number(price),

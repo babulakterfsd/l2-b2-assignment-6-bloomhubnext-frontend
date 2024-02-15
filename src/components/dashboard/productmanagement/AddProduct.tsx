@@ -26,7 +26,7 @@ const AddProduct = () => {
   const [occasions, setOccasions] = useState<string[]>([]);
   const [isDiscountRunning, setIsDiscountRunning] = useState<string>('false');
   const shopkeeper = useAppSelector(useCurrentShopkeeper);
-  const { _id, email } = shopkeeper as TShopkeeper;
+  const { _id, email, role } = shopkeeper as TShopkeeper;
   const [createProduct] = useCreateProductMutation();
   const navigate = useNavigate();
 
@@ -53,6 +53,16 @@ const AddProduct = () => {
 
   const handleAddProduct = async (e: any) => {
     e.preventDefault();
+
+    if (role !== 'manager') {
+      toast.error('Only managers can add new product.', {
+        position: 'top-right',
+        duration: 2500,
+      });
+      navigate('/dashboard');
+      return;
+    }
+
     const productData = {
       name,
       price: Number(price),

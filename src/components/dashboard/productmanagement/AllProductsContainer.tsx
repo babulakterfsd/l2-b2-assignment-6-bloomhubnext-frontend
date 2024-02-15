@@ -3,7 +3,9 @@ import {
   useDeleteProductMutation,
   useGetProductsQuery,
 } from '@/redux/api/productApi';
-import { TProduct } from '@/types/commonTypes';
+import { useCurrentShopkeeper } from '@/redux/features/authSlice';
+import { useAppSelector } from '@/redux/hook';
+import { TCurrentShopkeeper, TProduct } from '@/types/commonTypes';
 import { useEffect, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { CiEdit } from 'react-icons/ci';
@@ -27,10 +29,10 @@ const AllProductsContainer = () => {
   const [filterByArrangementStyle, setFilterByArrangementStyle] =
     useState<string>('');
   const [filterByOccasion, setFilterByOccasion] = useState<string>('');
-  // const [page, setPage] = useState<string>('1');
-  // const [limit, setLimit] = useState<string>('20');
   const [deleteContainer, setDeleteContainer] = useState([] as string[]);
   const [isMultipleDeleteActive, setIsMultipleDeleteActive] = useState(false);
+  const shopkeeper = useAppSelector(useCurrentShopkeeper);
+  const { role } = shopkeeper as TCurrentShopkeeper;
 
   useEffect(() => {
     if (deleteContainer.length > 0) {
@@ -47,6 +49,18 @@ const AllProductsContainer = () => {
   let limit = '30';
 
   const handleMultipleDelete = async (ids: string[]) => {
+    if (role !== 'manager') {
+      toast.error(
+        'You are not authorized to delete products, only managers can do this.',
+        {
+          position: 'top-right',
+          duration: 1500,
+        }
+      );
+      setDeleteContainer([]);
+      return;
+    }
+
     const allow = window.confirm(
       'Are you sure you want to delete selected products?'
     );
@@ -98,6 +112,17 @@ const AllProductsContainer = () => {
   };
 
   const handleDeleteProduct = async (id: string) => {
+    if (role !== 'manager') {
+      toast.error(
+        'You are not authorized to delete products, only managers can do this.',
+        {
+          position: 'top-right',
+          duration: 1500,
+        }
+      );
+      return;
+    }
+
     const res = await deleteProduct(id).unwrap();
 
     if (res?.statusCode === 200) {
@@ -176,8 +201,6 @@ const AllProductsContainer = () => {
   );
 
   const products = data?.data?.data;
-  // const totalItems = data?.data?.meta?.total;
-  // const totalPages = Math.ceil(Number(totalItems) / Number(limit));
 
   return (
     <div className="mb-10 lg:mb-24 lg:mt-16 lg:shadow-md lg:rounded-md lg:py-5 lg:px-6 lg:pb-8">

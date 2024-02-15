@@ -5,13 +5,15 @@ import {
 } from '@/redux/features/authSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { FieldValues, useForm } from 'react-hook-form';
+import { IoEyeOffOutline, IoEyeOutline } from 'react-icons/io5';
 import { toast } from 'sonner';
 import Styles from '../styles/home.module.css';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const { register, handleSubmit } = useForm();
   const [login] = useLoginMutation();
   const dispatch = useAppDispatch();
@@ -70,6 +72,19 @@ const Login = () => {
     }
   };
 
+  const toggleShowingPassword = () => {
+    const passwordInput = document.getElementById(
+      'password'
+    ) as HTMLInputElement;
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      setIsPasswordVisible(true);
+    } else {
+      passwordInput.type = 'password';
+      setIsPasswordVisible(false);
+    }
+  };
+
   return (
     <div className="grid h-screen grid-cols-12">
       <div
@@ -100,7 +115,7 @@ const Login = () => {
                 {...register('email')}
               />
             </div>
-            <div>
+            <div className="relative">
               <label
                 htmlFor="password"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -114,6 +129,12 @@ const Login = () => {
                 className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white  focus:outline-none"
                 {...register('password')}
               />
+              <span
+                className="absolute cursor-pointer top-10 right-3"
+                onClick={toggleShowingPassword}
+              >
+                {isPasswordVisible ? <IoEyeOutline /> : <IoEyeOffOutline />}
+              </span>
             </div>
             <button
               type="submit"
@@ -124,7 +145,7 @@ const Login = () => {
             <div className="flex items-center justify-between">
               <p className="text-sm">Not Registered Yet?</p>
               <Link to="/signup">
-                <span className="text-sm hover:text-red-300  hover:transition-all duration-300 ">
+                <span className="text-sm hover:text-red-300  hover:transition-all duration-300 underline">
                   Go to Signup
                 </span>
               </Link>
