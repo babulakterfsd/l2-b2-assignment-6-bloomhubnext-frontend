@@ -232,7 +232,7 @@ const ProductList = () => {
                       {' '}
                       {`${coupon.discount}%`}{' '}
                     </span>{' '}
-                    discount on each product. &nbsp; &nbsp; &nbsp;
+                    discount on each product. &nbsp;
                   </>
                 );
               })}
