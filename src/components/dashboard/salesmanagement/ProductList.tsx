@@ -135,6 +135,18 @@ const ProductList = () => {
       return;
     }
 
+    const isCouponAlreadyExist = runningCoupons?.find(
+      (coupon: TCoupon) => coupon?.code === newCouponCode
+    );
+
+    if (isCouponAlreadyExist) {
+      toast.error('Coupon code already exists', {
+        position: 'top-right',
+        duration: 1500,
+      });
+      return;
+    }
+
     if (!newCouponCode || !newCouponDiscount || !newCouponValidity) {
       toast.error('Please fill all the fields', {
         position: 'top-right',
