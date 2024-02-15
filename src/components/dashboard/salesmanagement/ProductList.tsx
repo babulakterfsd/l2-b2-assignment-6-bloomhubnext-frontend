@@ -1,14 +1,26 @@
+import { useGetProfileQuery } from '@/redux/api/authApi';
+import {
+  useCreateCouponMutation,
+  useGetAllCouponsQuery,
+} from '@/redux/api/couponApi';
 import { useGetProductsQuery } from '@/redux/api/productApi';
 import { useSellAProductMutation } from '@/redux/api/sellApi';
-import { TProduct } from '@/types/commonTypes';
+import { TCoupon, TProduct } from '@/types/commonTypes';
 import { useState } from 'react';
+import Marquee from 'react-fast-marquee';
 import { FaHandHoldingUsd } from 'react-icons/fa';
 import { GiFlowerPot } from 'react-icons/gi';
+import { IoIosAddCircleOutline } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
 import { toast } from 'sonner';
 
 const ProductList = () => {
   const [search, setSearch] = useState<string>('');
+  const [showCreateCouponModal, setShowCreateCouponodal] =
+    useState<boolean>(false);
+  const [newCouponCode, setNewCouponCode] = useState<string>('');
+  const [newCouponDiscount, setNewCouponDiscount] = useState<string>('');
+  const [newCouponValidity, setNewCoupnValidity] = useState<string>('');
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<TProduct>(
     {} as TProduct
@@ -16,7 +28,11 @@ const ProductList = () => {
   const [buyerName, setBuyerName] = useState<string>('');
   const [quantityToBeSold, setQuantityToBeSold] = useState<number>(0);
   const [dateOfSell, setDateOfSell] = useState<string>('');
-
+  const { data: profileData } = useGetProfileQuery(undefined);
+  const shopkeeperFromDb = profileData?.data;
+  const [createCoupon] = useCreateCouponMutation();
+  const { data: allRunningCoupons } = useGetAllCouponsQuery(undefined);
+  const runningCoupons = allRunningCoupons?.data;
   const [sellAProduct] = useSellAProductMutation();
 
   const page = '1';
@@ -105,18 +121,220 @@ const ProductList = () => {
     }
   };
 
+  const handleCreateCoupon = async (e: any) => {
+    e.preventDefault();
+
+    if (shopkeeperFromDb?.role !== 'manager') {
+      toast.error(
+        'You are not authorized to create coupon,only managers can create coupon',
+        {
+          position: 'top-right',
+          duration: 1500,
+        }
+      );
+      return;
+    }
+
+    if (!newCouponCode || !newCouponDiscount || !newCouponValidity) {
+      toast.error('Please fill all the fields', {
+        position: 'top-right',
+        duration: 1500,
+      });
+      return;
+    } else {
+      if (newCouponCode.length < 5) {
+        toast.error(
+          'Minimum length of coupon code should be equal or greater than 5',
+          {
+            position: 'top-right',
+            duration: 1500,
+          }
+        );
+        return;
+      } else if (newCouponCode.length > 10) {
+        toast.error(
+          'Maximum length of coupon code should be equal or less than 10',
+          {
+            position: 'top-right',
+            duration: 1500,
+          }
+        );
+        return;
+      } else if (Number(newCouponDiscount) < 1) {
+        toast.error('Minimum discount should be equal or greater than 1', {
+          position: 'top-right',
+          duration: 1500,
+        });
+        return;
+      } else if (Number(newCouponDiscount) > 100) {
+        toast.error('Maximum discount should be equal or less than 100', {
+          position: 'top-right',
+          duration: 1500,
+        });
+        return;
+      } else {
+        const response = await createCoupon({
+          code: newCouponCode,
+          discount: newCouponDiscount,
+          validTill: newCouponValidity,
+        }).unwrap();
+        if (response?.statusCode === 201) {
+          toast.success('Coupon created successfully', {
+            position: 'top-right',
+            duration: 1500,
+          });
+          setShowCreateCouponodal(false);
+          setNewCouponCode('');
+          setNewCouponDiscount('');
+          setNewCoupnValidity('');
+        } else {
+          toast.error('Something went wrong, please try again', {
+            position: 'top-right',
+            duration: 1500,
+          });
+        }
+      }
+    }
+  };
+
   return (
-    <div className="mb-10 lg:mb-24 lg:mt-16 lg:shadow-md lg:rounded-md lg:py-5 lg:px-6 lg:pb-8 lg:pt-5 overflow-x-hidden">
-      {/* header searchbar */}
-      <div className="flex justify-end items-center mt-6 mb-10 lg:mt-0 lg:mb-20 ">
+    <div className="mb-10 lg:mb-24 lg:mt-10 lg:shadow-md lg:rounded-md lg:py-5 lg:px-6 lg:pb-8 lg:pt-5 overflow-x-hidden">
+      {/* header */}
+      <div className="grid grid-cols-12 gap-y-3 mt-6 mb-10 lg:mt-0 justify-between items-center">
+        <button
+          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-3 col-span-12 lg:col-span-2 w-48 mx-auto z-50"
+          onClick={() => setShowCreateCouponodal(true)}
+        >
+          <IoIosAddCircleOutline style={{ fontSize: '18px' }} />{' '}
+          <span>Create Coupon</span>
+        </button>
+        <div className=" p-2 rounded-md text-sm font-bold col-span-12 lg:col-span-6 flex gap-x-6">
+          <Marquee key={Math.floor(Math.random() * 999)} speed={40}>
+            {runningCoupons?.length > 0 &&
+              runningCoupons.map((coupon: TCoupon) => {
+                return (
+                  <>
+                    Use coupon code '
+                    <span className="text-red-400">{coupon?.code}</span>' to get{' '}
+                    <span className="text-red-400 mx-1">
+                      {' '}
+                      {`${coupon.discount}%`}{' '}
+                    </span>{' '}
+                    discount on each product. &nbsp; &nbsp; &nbsp;
+                  </>
+                );
+              })}
+          </Marquee>
+        </div>
         <input
           type="search"
           id="search"
-          className="text-sm rounded-lg w-full mb-1.5 lg:mb-0 sm:w-4/6 lg:w-[320px] pl-10 p-2 focus:outline-none bg-gray-100 h-[44px]"
+          className="text-sm rounded-lg w-full mb-1.5 lg:mb-0 sm:w-4/6 lg:w-[320px] pl-10 p-2 focus:outline-none bg-gray-100 h-[44px] col-span-12 lg:col-span-4 mx-auto"
           placeholder="Search by product name or type"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+      </div>
+      {/* add coupon modal */}
+      <div>
+        {showCreateCouponModal ? (
+          <>
+            <div
+              className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
+              data-aos="zoom-in"
+              data-aos-duration="500"
+            >
+              <div className="relative w-[370px] lg:w-[640px] my-6 mx-auto">
+                {/*content*/}
+                <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
+                  {/*header*/}
+                  <div className="flex items-start justify-between p-5 border-b border-solid border-slate-200 rounded-t">
+                    <h3 className="text-md font-semibold text-center">
+                      Create Coupon Code for customers
+                    </h3>
+                    <button
+                      className="text-2xl text-red-300 hover:text-red-700 hover:transition-all duration-300 ease-in-out"
+                      onClick={() => setShowCreateCouponodal(false)}
+                    >
+                      <RxCross2 />
+                    </button>
+                  </div>
+                  {/*body*/}
+                  <form className="py-6 px-10">
+                    <div className="grid gap-4 grid-cols-1 sm:gap-x-6 sm:gap-y-4">
+                      {/*  code */}
+                      <div className="w-full">
+                        <label
+                          htmlFor="couponcode"
+                          className="block mb-2 text-sm font-medium "
+                        >
+                          Code
+                        </label>
+
+                        <input
+                          type="text"
+                          name="couponcode"
+                          id="couponcode"
+                          className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                          placeholder="e.g. ABCD123"
+                          required
+                          onChange={(e) => setNewCouponCode(e.target.value)}
+                        />
+                      </div>
+                      {/*  discount */}
+                      <div className="w-full">
+                        <label
+                          htmlFor="discount"
+                          className="block mb-2 text-sm font-medium "
+                        >
+                          Discount
+                        </label>
+
+                        <input
+                          type="text"
+                          name="discount"
+                          id="discount"
+                          className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                          placeholder="e.g. 7"
+                          required
+                          onChange={(e) => setNewCouponDiscount(e.target.value)}
+                        />
+                      </div>
+                      {/* bloom date */}
+                      <div className="w-full">
+                        <label
+                          htmlFor="validity"
+                          className="block mb-2 text-sm font-medium "
+                        >
+                          Coupon Validity
+                        </label>
+
+                        <input
+                          type="date"
+                          name="validity"
+                          id="validity"
+                          className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                          placeholder="e.g. January 28, 2024"
+                          required
+                          value={newCouponValidity}
+                          onChange={(e) => setNewCoupnValidity(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto disabled:cursor-not-allowed disabled:bg-gray-300"
+                      onClick={(e) => handleCreateCoupon(e)}
+                    >
+                      Create Coupon
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div className="opacity-25 fixed inset-0 z-40 bg-black transition-all duration-300"></div>
+          </>
+        ) : null}
       </div>
       {/* product list */}
       <div>

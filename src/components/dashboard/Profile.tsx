@@ -176,7 +176,7 @@ const Profile = () => {
                 {showProfilePhotoUpdateModal ? (
                   <>
                     <div
-                      className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
+                      className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none transition-all"
                       data-aos="zoom-in"
                       data-aos-duration="500"
                     >
@@ -232,8 +232,8 @@ const Profile = () => {
                               disabled={updateProfilePhotoOngoing}
                             >
                               {updateProfilePhotoOngoing
-                                ? 'Updating Profile'
-                                : 'Update Profile'}
+                                ? 'Updating Profile Photo ...'
+                                : 'Update Profile Photo'}
                             </button>
                           </form>
                         </div>

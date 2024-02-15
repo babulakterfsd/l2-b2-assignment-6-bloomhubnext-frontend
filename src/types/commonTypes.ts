@@ -60,4 +60,11 @@ export type TAllFilters = {
   type: string;
 };
 
+export type TCoupon = {
+  _id: string;
+  code: string;
+  discount: string;
+  validTill: string;
+};
+
 export type TTimeframe = 'daily' | 'weekly' | 'monthly' | 'yearly';
