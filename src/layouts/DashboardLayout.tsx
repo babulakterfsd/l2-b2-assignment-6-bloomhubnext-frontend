@@ -4,24 +4,36 @@ import {
 } from '@/redux/features/authSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { TCurrentShopkeeper } from '@/types/commonTypes';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaSellsy, FaUserTie } from 'react-icons/fa';
 import { IoMdHome, IoMdLogOut } from 'react-icons/io';
 import { LiaSitemapSolid } from 'react-icons/lia';
 import { RxCross2 } from 'react-icons/rx';
 import { TbHistory } from 'react-icons/tb';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import logo from '../../public/flowers.png';
 import Styles from '../styles/home.module.css';
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeDashboardRoute, setActiveDashboardRoute] =
-    useState('productmanagement');
+  const [activeDashboardRoute, setActiveDashboardRoute] = useState('');
   const dispatch = useAppDispatch();
   const shopkeeperInfo = useAppSelector(useCurrentShopkeeper);
   const { name, role } = shopkeeperInfo as TCurrentShopkeeper;
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/dashboard') {
+      setActiveDashboardRoute('productmanagement');
+    } else if (location.pathname === '/dashboard/profile') {
+      setActiveDashboardRoute('profile');
+    } else if (location.pathname === '/dashboard/salesmanagement') {
+      setActiveDashboardRoute('sellsmanagement');
+    } else if (location.pathname === '/dashboard/saleshistory') {
+      setActiveDashboardRoute('sellshistory');
+    }
+  }, [location.pathname, dispatch, shopkeeperInfo]);
 
   const handleLogout = () => {
     toast.success('Logout Successful', {
@@ -35,6 +47,11 @@ const DashboardLayout = () => {
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const profileClickHandler = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+    setActiveDashboardRoute('profile');
   };
 
   return (
@@ -101,10 +118,18 @@ const DashboardLayout = () => {
             </button>
           </div>
           <ul className="font-medium lg:mt-12">
-            <div className="lg:hidden flex justify-center items-center space-x-2 mb-4">
+            <Link
+              to="/dashboard/profile"
+              className={` lg:hidden flex ml-1 lg:ml-0 items-center space-x-2 mb-4 hover:text-red-400 transition-all duration-300 ease-in-out rounded-md py-2.5 px-3 ${
+                activeDashboardRoute === 'profile'
+                  ? 'bg-red-300 text-white'
+                  : 'bg-none'
+              }`}
+              onClick={profileClickHandler}
+            >
               <FaUserTie />
               <li className="">{` ${name} (${role})`}</li>
-            </div>
+            </Link>
             <hr className="mt-2 lg:hidden" />
             <li>
               <Link
@@ -198,10 +223,16 @@ const DashboardLayout = () => {
       <div className={`p-4 lg:p-0 ${isSidebarOpen ? 'sm:ml-64' : ''} sm:ml-64`}>
         {/* dashboard content */}
         <div className="py-10 hidden lg:flex justify-end items-center bg-[#f9fafb]">
-          <div className="flex justify-center items-center space-x-2 mr-10">
+          <Link
+            to="/dashboard/profile"
+            className={`flex justify-center items-center space-x-2 hover:text-red-400 transition-all duration-300 ease-in-out mr-10 ${
+              activeDashboardRoute === 'profile' ? 'text-red-300' : ''
+            }`}
+            onClick={profileClickHandler}
+          >
             <FaUserTie />
-            <li className="list-none">{` ${name} (${role})`}</li>
-          </div>
+            <li className="list-none text-md font-semibold">{` ${name} (${role})`}</li>
+          </Link>
         </div>
         <Outlet />
       </div>

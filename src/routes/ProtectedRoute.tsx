@@ -4,12 +4,11 @@ import {
 } from '@/redux/features/authSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { ReactNode, useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const token = useAppSelector(useCurrentToken);
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('http://localhost:5000/api/auth/verify-token', {
@@ -25,14 +24,12 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
           dispatch(
             setShopkeeperInLocalState({ shopkeeper: null, token: null })
           );
-        } else {
-          navigate('/dashboard');
         }
       });
   }, [token]);
 
   if (!token) {
-    return <Navigate to="/login" replace={true} />;
+    return <Navigate state={location.pathname} to="/login" replace={true} />;
   }
 
   return children as JSX.Element;
