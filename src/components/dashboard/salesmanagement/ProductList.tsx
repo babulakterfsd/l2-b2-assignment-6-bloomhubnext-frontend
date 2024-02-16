@@ -54,7 +54,8 @@ const ProductList = () => {
   const [createCoupon] = useCreateCouponMutation();
   const { data: allRunningCoupons } = useGetAllCouponsQuery(undefined);
   const runningCoupons = allRunningCoupons?.data;
-  const [sellAProduct] = useSellAProductMutation();
+  const [sellAProduct, { isLoading: sellProductOngoing }] =
+    useSellAProductMutation();
   const [checkCustomerExistance] = useCheckCustomerExistanceMutation();
 
   const checkIfCustomerExists = async (e: any) => {
@@ -733,8 +734,9 @@ const ProductList = () => {
                         </div>
                         <button
                           type="submit"
-                          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto"
+                          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto disabled:cursor-not-allowed disabled:bg-red-100"
                           onClick={(e) => handleSellProduct(e, selectedProduct)}
+                          disabled={sellProductOngoing}
                         >
                           <FaHandHoldingUsd style={{ fontSize: '18px' }} />
                           <span>Sell Product</span>
@@ -866,8 +868,9 @@ const ProductList = () => {
                         </div>
                         <button
                           type="submit"
-                          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto"
+                          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto disabled:cursor-not-allowed disabled:bg-red-100"
                           onClick={(e) => handleSellProduct(e, selectedProduct)}
+                          disabled={sellProductOngoing}
                         >
                           <FaHandHoldingUsd style={{ fontSize: '18px' }} />
                           <span>Sell Product</span>
