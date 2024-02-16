@@ -100,10 +100,13 @@ const SellsSummary = () => {
                     Quantity
                   </th>
                   <th scope="col" className="px-6 py-3">
-                    Buyer Name
+                    Customer Email
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Date of Sell
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Discount Given
                   </th>
                   <th scope="col" className="px-6 py-3">
                     Bill Paid
@@ -150,10 +153,13 @@ const SellsSummary = () => {
                             {soldProduct?.quantityToBeSold}
                           </td>
                           <td className="px-6 py-4">
-                            {soldProduct?.buyerName}
+                            {soldProduct?.customerEmail}
                           </td>
                           <td className="px-6 py-4">
                             {soldProduct?.dateOfSell}
+                          </td>
+                          <td className="px-6 py-4">
+                            {`$${soldProduct?.discountGiven}`}
                           </td>
                           <td className="px-6 py-4 font-semibold">
                             {`$${soldProduct?.totalBill}`}

@@ -30,8 +30,13 @@ const ProductList = () => {
   const [selectedProduct, setSelectedProduct] = useState<TProduct>(
     {} as TProduct
   );
+  const [showExistingCustomerSellingForm, setShowExistingCustomerSellingForm] =
+    useState<boolean>(false);
+  const [showNewCustomerSellingForm, setShowNewCustomerSellingForm] =
+    useState<boolean>(false);
   const [customerName, setCustomerName] = useState<string>('');
   const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [customerEmailToShow, setCustomerEmailToShow] = useState<string>('');
   const [customerPassword, setCustomerPassword] = useState<string>('');
   const [customerBhp, setCustomerBhp] = useState<string>('0');
   const [appliedCoupon, setAppliedCoupon] = useState<string>('');
@@ -76,7 +81,10 @@ const ProductList = () => {
 
       if (response?.data === true) {
         setIsCustomerExists(true);
+        setShowNewCustomerSellingForm(false);
+        setShowExistingCustomerSellingForm(true);
         setCustomerEmail(searchedCustomerEmail);
+        setCustomerEmailToShow(searchedCustomerEmail);
         toast.success(
           'Customer already exists with that email, sell directly',
           {
@@ -86,7 +94,10 @@ const ProductList = () => {
         );
       } else {
         setIsCustomerExists(false);
+        setShowExistingCustomerSellingForm(false);
+        setShowNewCustomerSellingForm(true);
         setCustomerEmail(searchedCustomerEmail);
+        setCustomerEmailToShow(searchedCustomerEmail);
         toast.error(
           'Customer does not exists. Create a new customer as well as sell product.',
           {
@@ -214,6 +225,9 @@ const ProductList = () => {
           setAppliedCoupon('');
           setCustomerEmail('');
           setIsCustomerExists(false);
+          setShowNewCustomerSellingForm(false);
+          setShowExistingCustomerSellingForm(false);
+          setSearchedCustomerEmail('');
         } else {
           toast.error('Something went wrong, please try again', {
             position: 'top-right',
@@ -557,7 +571,7 @@ const ProductList = () => {
                       </div>
                     </div>
                     {/*body*/}
-                    {isCustomerExists ? (
+                    {showExistingCustomerSellingForm ? (
                       <form className="py-6 px-10">
                         <div className="grid gap-4 grid-cols-12 sm:gap-x-6 sm:gap-y-4">
                           {/* customer email */}
@@ -576,7 +590,7 @@ const ProductList = () => {
                               className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none cursor-not-allowed"
                               placeholder="please write the email on the search bar avobe"
                               required
-                              value={searchedCustomerEmail}
+                              value={customerEmailToShow}
                               readOnly
                             />
                           </div>
@@ -648,7 +662,8 @@ const ProductList = () => {
                           <span>Sell Product</span>
                         </button>
                       </form>
-                    ) : (
+                    ) : null}
+                    {showNewCustomerSellingForm ? (
                       <form className="py-6 px-10">
                         <div className="grid gap-4 grid-cols-12 sm:gap-x-6 sm:gap-y-4">
                           {/* customer name */}
@@ -687,7 +702,7 @@ const ProductList = () => {
                               className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none cursor-not-allowed"
                               placeholder="e.g. customer@bloomhub.com"
                               required
-                              value={searchedCustomerEmail}
+                              value={customerEmailToShow}
                               readOnly
                             />
                           </div>
@@ -780,7 +795,7 @@ const ProductList = () => {
                           <span>Sell Product</span>
                         </button>
                       </form>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>

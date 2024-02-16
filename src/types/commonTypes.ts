@@ -41,8 +41,11 @@ export type TSoldProduct = {
   productName: string;
   productPrice: number;
   quantityToBeSold: number;
-  buyerName: string;
+  customerName: string;
+  customerEmail: string;
   dateOfSell: string;
+  discountPercentage: number;
+  discountGiven: number;
   totalBill: number;
 };
 
