@@ -1,11 +1,16 @@
-import { useGetProfileQuery } from '@/redux/api/authApi';
+import {
+  useCheckCustomerExistanceMutation,
+  useGetProfileQuery,
+} from '@/redux/api/authApi';
 import {
   useCreateCouponMutation,
   useGetAllCouponsQuery,
 } from '@/redux/api/couponApi';
 import { useGetProductsQuery } from '@/redux/api/productApi';
 import { useSellAProductMutation } from '@/redux/api/sellApi';
-import { TCoupon, TProduct } from '@/types/commonTypes';
+import { useCurrentShopkeeper } from '@/redux/features/authSlice';
+import { useAppSelector } from '@/redux/hook';
+import { TCoupon, TProduct, TShopkeeper } from '@/types/commonTypes';
 import { useState } from 'react';
 import Marquee from 'react-fast-marquee';
 import { FaHandHoldingUsd } from 'react-icons/fa';
@@ -25,15 +30,78 @@ const ProductList = () => {
   const [selectedProduct, setSelectedProduct] = useState<TProduct>(
     {} as TProduct
   );
-  const [buyerName, setBuyerName] = useState<string>('');
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [customerPassword, setCustomerPassword] = useState<string>('');
+  const [customerBhp, setCustomerBhp] = useState<string>('0');
+  const [appliedCoupon, setAppliedCoupon] = useState<string>('');
+  const [searchedCustomerEmail, setSearchedCustomerEmail] =
+    useState<string>('');
+  const [isCustomerExists, setIsCustomerExists] = useState<boolean>(false);
   const [quantityToBeSold, setQuantityToBeSold] = useState<number>(0);
   const [dateOfSell, setDateOfSell] = useState<string>('');
   const { data: profileData } = useGetProfileQuery(undefined);
   const shopkeeperFromDb = profileData?.data;
+  const shopkeeprInLocal = useAppSelector(useCurrentShopkeeper);
+  const { role: localRole, email: localEmail } =
+    shopkeeprInLocal as TShopkeeper;
+
   const [createCoupon] = useCreateCouponMutation();
   const { data: allRunningCoupons } = useGetAllCouponsQuery(undefined);
   const runningCoupons = allRunningCoupons?.data;
   const [sellAProduct] = useSellAProductMutation();
+  const [checkCustomerExistance] = useCheckCustomerExistanceMutation();
+
+  const checkIfCustomerExists = async (e: any) => {
+    e.preventDefault();
+
+    if (localRole !== 'seller') {
+      toast.error(
+        'Only sellers can sell products. So, you need not to check if customer already exists or not',
+        {
+          position: 'top-right',
+          duration: 1500,
+        }
+      );
+      return;
+    }
+
+    const isEmail = new RegExp(
+      /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i
+    );
+    if (isEmail.test(searchedCustomerEmail)) {
+      const response = await checkCustomerExistance(
+        searchedCustomerEmail
+      ).unwrap();
+
+      if (response?.data === true) {
+        setIsCustomerExists(true);
+        setCustomerEmail(searchedCustomerEmail);
+        toast.success(
+          'Customer already exists with that email, sell directly',
+          {
+            position: 'top-right',
+            duration: 1500,
+          }
+        );
+      } else {
+        setIsCustomerExists(false);
+        setCustomerEmail(searchedCustomerEmail);
+        toast.error(
+          'Customer does not exists. Create a new customer as well as sell product.',
+          {
+            position: 'top-right',
+            duration: 1500,
+          }
+        );
+      }
+    } else {
+      toast.error('Please enter a valid email', {
+        position: 'top-right',
+        duration: 1500,
+      });
+    }
+  };
 
   const page = '1';
   const limit = '50';
@@ -72,51 +140,86 @@ const ProductList = () => {
 
   const handleSellProduct = async (e: any, product: TProduct) => {
     e.preventDefault();
-    const productToBeSold = {
-      productID: product?._id,
-      productName: product?.name,
-      productPrice: product?.price,
-      quantityToBeSold,
-      buyerName,
-      dateOfSell,
-      totalBill: product?.price * quantityToBeSold,
-    };
-    // setShowModal(false);
 
-    if (!buyerName || !dateOfSell || !quantityToBeSold) {
-      toast.error('Please fill all the fields', {
+    if (localRole !== 'seller') {
+      toast.error('Only sellers can sell products.', {
         position: 'top-right',
         duration: 1500,
       });
-    } else if (product?.quantity < quantityToBeSold) {
-      toast.error(
-        'We do not have enough quantity to sell, please try again with less quantity',
-        {
-          position: 'top-right',
-          duration: 1500,
-        }
-      );
-    } else if (dateOfSell > new Date().toISOString().split('T')[0]) {
-      toast.error('You can not sell a product in future date', {
+      return;
+    }
+
+    const isGivenCouponValid = runningCoupons?.find(
+      (coupon: TCoupon) => coupon?.code === appliedCoupon
+    );
+
+    if (!isGivenCouponValid && appliedCoupon) {
+      setAppliedCoupon('');
+      toast.error('Please enter a valid coupon code or keep the field empty', {
         position: 'top-right',
         duration: 1500,
       });
-    } else {
-      const response = await sellAProduct(productToBeSold).unwrap();
-      if (response?.statusCode === 201) {
-        toast.success('Product sold successfully', {
+      return;
+    }
+
+    const discountPercentage = isGivenCouponValid?.discount;
+    const discountGiven =
+      (product?.price * quantityToBeSold * Number(discountPercentage)) / 100;
+
+    if (isCustomerExists) {
+      const productToBeSold = {
+        productID: product?._id,
+        productName: product?.name,
+        productPrice: product?.price,
+        appliedCoupon,
+        discountPercentage: Number(discountPercentage) || 0,
+        quantityToBeSold,
+        discountGiven: appliedCoupon ? discountGiven : 0,
+        totalBill:
+          product?.price * quantityToBeSold -
+          (appliedCoupon ? discountGiven : 0),
+        customerEmail,
+        sellerEmail: localEmail,
+        dateOfSell,
+      };
+
+      if (!customerEmail || !dateOfSell || !quantityToBeSold) {
+        toast.error('Please fill all the fields', {
           position: 'top-right',
           duration: 1500,
         });
-        setShowModal(false);
-        setBuyerName('');
-        setDateOfSell('');
-        setQuantityToBeSold(0);
+      } else if (product?.quantity < quantityToBeSold) {
+        toast.error(
+          'We do not have enough quantity to sell, please try again with less quantity',
+          {
+            position: 'top-right',
+            duration: 1500,
+          }
+        );
+      } else if (dateOfSell > new Date().toISOString().split('T')[0]) {
+        toast.error('You can not sell a product in future date', {
+          position: 'top-right',
+          duration: 1500,
+        });
       } else {
-        toast.error('Something went wrong, please try again', {
-          position: 'top-right',
-          duration: 1500,
-        });
+        const response = await sellAProduct(productToBeSold).unwrap();
+        if (response?.statusCode === 201) {
+          toast.success('Product sold successfully', {
+            position: 'top-right',
+            duration: 1500,
+          });
+          setShowModal(false);
+          setDateOfSell('');
+          setQuantityToBeSold(0);
+          setAppliedCoupon('');
+          setCustomerEmail('');
+          setIsCustomerExists(false);
+        } else {
+          toast.error('Something went wrong, please try again', {
+            position: 'top-right',
+            duration: 1500,
+          });
+        }
       }
     }
   };
@@ -225,15 +328,16 @@ const ProductList = () => {
             {runningCoupons?.length > 0 &&
               runningCoupons.map((coupon: TCoupon) => {
                 return (
-                  <>
+                  <span key={Math.random() * 999}>
                     Use coupon code '
                     <span className="text-red-400">{coupon?.code}</span>' to get{' '}
-                    <span className="text-red-400 mx-1">
+                    <span className="text-red-400 mx-0.5">
                       {' '}
                       {`${coupon.discount}%`}{' '}
                     </span>{' '}
-                    discount on each product. &nbsp;
-                  </>
+                    discount on your{' '}
+                    <span className="text-red-400">total bill</span>. &nbsp;
+                  </span>
                 );
               })}
           </Marquee>
@@ -403,93 +507,280 @@ const ProductList = () => {
         <div>
           {showModal ? (
             <>
-              <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
+              <div
+                className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
+                data-aos="zoom-in"
+                data-aos-duration="500"
+              >
                 <div className="relative w-[370px] lg:w-[640px] my-6 mx-auto">
                   {/*content*/}
                   <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
                     {/*header*/}
-                    <div className="flex items-start justify-between p-5 border-b border-solid border-slate-200 rounded-t">
-                      <h3 className="text-md font-semibold text-center">
-                        Sell : {selectedProduct?.name}
-                      </h3>
-                      <button
-                        className="text-2xl text-red-300 hover:text-red-700 hover:transition-all duration-300 ease-in-out"
-                        onClick={() => setShowModal(!showModal)}
-                      >
-                        <RxCross2 />
-                      </button>
-                    </div>
-                    {/*body*/}
-                    <form className="py-6 px-10">
-                      <div className="grid gap-4 grid-cols-1 sm:gap-x-6 sm:gap-y-4">
-                        {/* buyer name */}
-                        <div className="w-full">
-                          <label
-                            htmlFor="buyername"
-                            className="block mb-2 text-sm font-medium "
-                          >
-                            Buyer Name
-                          </label>
-
+                    <div className="flex flex-col items-start justify-between p-5 border-b border-solid border-slate-200 rounded-t">
+                      <div className="flex items-start justify-between w-full">
+                        <h3 className="text-md font-semibold text-center">
+                          Sell : {selectedProduct?.name}
+                        </h3>
+                        <button
+                          className="text-2xl text-red-300 hover:text-red-700 hover:transition-all duration-300 ease-in-out"
+                          onClick={() => setShowModal(!showModal)}
+                        >
+                          <RxCross2 />
+                        </button>
+                      </div>
+                      <div>
+                        <p className="text-sm my-4">
+                          Search customer by their email, if customer already
+                          exists, seller will directly sell product and if
+                          customer doesn't exists with the given email, seller
+                          will create a customer as well as sell the product.
+                        </p>
+                        <form className="flex justify-start flex-col gap-y-2">
                           <input
-                            type="text"
-                            name="buyername"
-                            id="buyername"
-                            className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
-                            placeholder="e.g. Babul Akter"
-                            required
-                            onChange={(e) => setBuyerName(e.target.value)}
-                          />
-                        </div>
-                        <div className="w-full">
-                          <label
-                            htmlFor="quantitytobesold"
-                            className="block mb-2 text-sm font-medium "
-                          >
-                            Quantity
-                          </label>
-
-                          <input
-                            type="number"
-                            name="quantitytobesold"
-                            id="quantitytobesold"
-                            className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
-                            placeholder="e.g. 7"
-                            required
+                            type="search"
+                            id="searchcustomer"
+                            className="text-sm rounded-lg w-full mb-1.5 lg:mb-0 sm:w-4/6 lg:w-[320px] pl-10 p-2 focus:outline-none bg-gray-100 h-[44px] col-span-12 lg:col-span-4 mx-auto"
+                            placeholder="Search customer by email"
+                            value={searchedCustomerEmail}
                             onChange={(e) =>
-                              setQuantityToBeSold(Number(e.target.value))
+                              setSearchedCustomerEmail(e.target.value)
                             }
                           />
-                        </div>
-                        {/* sell date */}
-                        <div className="w-full">
-                          <label
-                            htmlFor="dateofsell"
-                            className="block mb-2 text-sm font-medium "
+                          <button
+                            type="submit"
+                            onClick={checkIfCustomerExists}
+                            className="bg-red-300 rounded-md p-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 w-44 ease-in-out mx-auto"
                           >
-                            Date of Sell
-                          </label>
-
-                          <input
-                            type="date"
-                            name="dateofsell"
-                            id="dateofsell"
-                            className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
-                            placeholder="e.g. 2024-02-01"
-                            required
-                            onChange={(e) => setDateOfSell(e.target.value)}
-                          />
-                        </div>
+                            search customer
+                          </button>
+                        </form>
                       </div>
-                      <button
-                        type="submit"
-                        className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto"
-                        onClick={(e) => handleSellProduct(e, selectedProduct)}
-                      >
-                        <FaHandHoldingUsd style={{ fontSize: '18px' }} />
-                        <span>Sell Product</span>
-                      </button>
-                    </form>
+                    </div>
+                    {/*body*/}
+                    {isCustomerExists ? (
+                      <form className="py-6 px-10">
+                        <div className="grid gap-4 grid-cols-12 sm:gap-x-6 sm:gap-y-4">
+                          {/* customer email */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="customeremail"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Customer Email
+                            </label>
+
+                            <input
+                              type="email"
+                              name="customeremail"
+                              id="customeremail"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none cursor-not-allowed"
+                              placeholder="please write the email on the search bar avobe"
+                              required
+                              value={searchedCustomerEmail}
+                              readOnly
+                            />
+                          </div>
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="quantitytobesold"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Quantity
+                            </label>
+
+                            <input
+                              type="number"
+                              name="quantitytobesold"
+                              id="quantitytobesold"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. 7"
+                              required
+                              onChange={(e) =>
+                                setQuantityToBeSold(Number(e.target.value))
+                              }
+                            />
+                          </div>
+                          {/* sell date */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="dateofsell"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Date of Sell
+                            </label>
+
+                            <input
+                              type="date"
+                              name="dateofsell"
+                              id="dateofsell"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. 2024-02-01"
+                              required
+                              onChange={(e) => setDateOfSell(e.target.value)}
+                            />
+                          </div>
+                          {/* apply coupon */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="applycoupon"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Coupon Code (optional)
+                            </label>
+
+                            <input
+                              type="string"
+                              name="applycoupon"
+                              id="applycoupon"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. eid2024"
+                              value={appliedCoupon}
+                              onChange={(e) => setAppliedCoupon(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto"
+                          onClick={(e) => handleSellProduct(e, selectedProduct)}
+                        >
+                          <FaHandHoldingUsd style={{ fontSize: '18px' }} />
+                          <span>Sell Product</span>
+                        </button>
+                      </form>
+                    ) : (
+                      <form className="py-6 px-10">
+                        <div className="grid gap-4 grid-cols-12 sm:gap-x-6 sm:gap-y-4">
+                          {/* customer name */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="customername"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Customer Name
+                            </label>
+
+                            <input
+                              type="text"
+                              name="customername"
+                              id="customername"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. Babul Akter"
+                              required
+                              onChange={(e) => setCustomerName(e.target.value)}
+                              value={customerName}
+                            />
+                          </div>
+                          {/* customer email */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="customeremail"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Customer Email
+                            </label>
+
+                            <input
+                              type="email"
+                              name="customeremail"
+                              id="customeremail"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none cursor-not-allowed"
+                              placeholder="e.g. customer@bloomhub.com"
+                              required
+                              value={searchedCustomerEmail}
+                              readOnly
+                            />
+                          </div>
+                          {/* customer password */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="customerpassword"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Customer Password
+                            </label>
+
+                            <input
+                              type="passwprd"
+                              name="customerpassword"
+                              id="customerpassword"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. awal123"
+                              required
+                              onChange={(e) =>
+                                setCustomerPassword(e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="quantitytobesold"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Quantity
+                            </label>
+
+                            <input
+                              type="number"
+                              name="quantitytobesold"
+                              id="quantitytobesold"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. 7"
+                              required
+                              onChange={(e) =>
+                                setQuantityToBeSold(Number(e.target.value))
+                              }
+                            />
+                          </div>
+                          {/* sell date */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="dateofsell"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Date of Sell
+                            </label>
+
+                            <input
+                              type="date"
+                              name="dateofsell"
+                              id="dateofsell"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. 2024-02-01"
+                              required
+                              onChange={(e) => setDateOfSell(e.target.value)}
+                            />
+                          </div>
+                          {/* apply coupon */}
+                          <div className="col-span-6">
+                            <label
+                              htmlFor="applycoupon"
+                              className="block mb-2 text-sm font-medium "
+                            >
+                              Coupon Code (optional)
+                            </label>
+
+                            <input
+                              type="string"
+                              name="applycoupon"
+                              id="applycoupon"
+                              className="text-sm rounded-lg block w-full p-2.5 bg-gray-50 border-gray-600  focus:outline-none"
+                              placeholder="e.g. eid2024"
+                              value={appliedCoupon}
+                              onChange={(e) => setAppliedCoupon(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-6 ml-auto"
+                          onClick={(e) => handleSellProduct(e, selectedProduct)}
+                        >
+                          <FaHandHoldingUsd style={{ fontSize: '18px' }} />
+                          <span>Sell Product</span>
+                        </button>
+                      </form>
+                    )}
                   </div>
                 </div>
               </div>

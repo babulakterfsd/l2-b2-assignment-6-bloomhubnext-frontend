@@ -10,6 +10,7 @@ const authApi = baseApi.injectEndpoints({
           body: loginData,
         };
       },
+      invalidatesTags: ['shopkeeper'],
     }),
     signup: builder.mutation({
       query: (signupData) => {
@@ -19,6 +20,7 @@ const authApi = baseApi.injectEndpoints({
           body: signupData,
         };
       },
+      invalidatesTags: ['shopkeeper'],
     }),
     getProfile: builder.query({
       query: () => {
@@ -39,6 +41,15 @@ const authApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ['shopkeeper'],
     }),
+    checkCustomerExistance: builder.mutation({
+      query: (email) => {
+        return {
+          url: '/auth/check-customer-existance',
+          method: 'POST',
+          body: { email },
+        };
+      },
+    }),
   }),
 });
 
@@ -47,4 +58,5 @@ export const {
   useSignupMutation,
   useGetProfileQuery,
   useUpdateProfileMutation,
+  useCheckCustomerExistanceMutation,
 } = authApi;
