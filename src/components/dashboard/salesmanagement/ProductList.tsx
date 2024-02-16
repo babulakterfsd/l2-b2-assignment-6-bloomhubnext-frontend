@@ -235,6 +235,84 @@ const ProductList = () => {
           });
         }
       }
+    } else {
+      const productToBeSold = {
+        productID: product?._id,
+        productName: product?.name,
+        productPrice: product?.price,
+        appliedCoupon,
+        discountPercentage: Number(discountPercentage) || 0,
+        quantityToBeSold,
+        discountGiven: appliedCoupon ? discountGiven : 0,
+        totalBill:
+          product?.price * quantityToBeSold -
+          (appliedCoupon ? discountGiven : 0),
+        customerEmail,
+        customerName,
+        customerPassword,
+        sellerEmail: localEmail,
+        dateOfSell,
+      };
+
+      if (
+        !customerEmail ||
+        !dateOfSell ||
+        !quantityToBeSold ||
+        !customerName ||
+        !customerPassword
+      ) {
+        toast.error('Please fill all the fields', {
+          position: 'top-right',
+          duration: 1500,
+        });
+      } else if (product?.quantity < quantityToBeSold) {
+        toast.error(
+          'We do not have enough quantity to sell, please try again with less quantity',
+          {
+            position: 'top-right',
+            duration: 1500,
+          }
+        );
+      } else if (dateOfSell > new Date().toISOString().split('T')[0]) {
+        toast.error('You can not sell a product in future date', {
+          position: 'top-right',
+          duration: 1500,
+        });
+      } else if (customerPassword.length < 6 || !/\d/.test(customerPassword)) {
+        toast.error(
+          'Password should be at least 6 characters long and contain a number',
+          {
+            position: 'top-right',
+            icon: '😢',
+            duration: 2500,
+          }
+        );
+        return;
+      } else {
+        const response = await sellAProduct(productToBeSold).unwrap();
+        if (response?.statusCode === 201) {
+          toast.success('Product sold successfully', {
+            position: 'top-right',
+            duration: 1500,
+          });
+          setShowModal(false);
+          setDateOfSell('');
+          setQuantityToBeSold(0);
+          setAppliedCoupon('');
+          setCustomerEmail('');
+          setCustomerName('');
+          setCustomerPassword('');
+          setIsCustomerExists(false);
+          setShowNewCustomerSellingForm(false);
+          setShowExistingCustomerSellingForm(false);
+          setSearchedCustomerEmail('');
+        } else {
+          toast.error('Something went wrong, please try again', {
+            position: 'top-right',
+            duration: 1500,
+          });
+        }
+      }
     }
   };
 

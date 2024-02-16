@@ -34,6 +34,7 @@ const Signup = () => {
         icon: '😢',
         duration: 1500,
       });
+      return;
     } else if (password.length < 6 || !/\d/.test(password)) {
       toast.error(
         'Password should be at least 6 characters long and contain a number',
@@ -43,6 +44,7 @@ const Signup = () => {
           duration: 2500,
         }
       );
+      return;
     } else {
       const response = await signup(signupData).unwrap();
       if (response?.data?.email === email) {
