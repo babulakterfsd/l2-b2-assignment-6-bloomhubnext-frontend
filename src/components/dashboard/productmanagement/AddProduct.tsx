@@ -5,10 +5,13 @@ import {
   flowerSizes,
 } from '@/lib/utils';
 import { useCreateProductMutation } from '@/redux/api/productApi';
-import { useCurrentShopkeeper } from '@/redux/features/authSlice';
-import { useAppSelector } from '@/redux/hook';
+import {
+  setShopkeeperInLocalState,
+  useCurrentShopkeeper,
+} from '@/redux/features/authSlice';
+import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { TShopkeeper } from '@/types/commonTypes';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { toast } from 'sonner';
@@ -29,6 +32,19 @@ const AddProduct = () => {
   const { _id, email, role } = shopkeeper as TShopkeeper;
   const [createProduct] = useCreateProductMutation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (role === 'customer') {
+      dispatch(
+        setShopkeeperInLocalState({
+          shopkeeper: null,
+          token: null,
+        })
+      );
+      navigate('/login');
+    }
+  }, [location.pathname, role, navigate]);
 
   const handleColorChange = (selectedColors: any) => {
     const selectedColorValues = selectedColors.map((color: any) => color.value);

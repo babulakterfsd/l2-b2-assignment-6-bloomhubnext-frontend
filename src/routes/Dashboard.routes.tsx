@@ -1,4 +1,5 @@
 import Profile from '@/components/dashboard/Profile';
+import CustomerDashboard from '@/components/dashboard/customerarea/CustomerDashboard';
 import AddProduct from '@/components/dashboard/productmanagement/AddProduct';
 import CreateVariant from '@/components/dashboard/productmanagement/CreateVariant';
 
@@ -11,6 +12,7 @@ import NotFound from '@/pages/NotFound';
 export const dashboardRoutePaths = [
   { index: true, element: <ProductManagement /> },
   { path: 'profile', element: <Profile /> },
+  { path: 'customerdashboard', element: <CustomerDashboard /> },
   { path: 'productmanagement/addproduct', element: <AddProduct /> },
   { path: 'productmanagement/createvariant/:id', element: <CreateVariant /> },
   { path: 'productmanagement/updateproduct/:id', element: <UpdateProduct /> },

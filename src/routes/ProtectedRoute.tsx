@@ -11,13 +11,16 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/auth/verify-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ token }),
-    })
+    fetch(
+      'https://bloomhub-assignment6-backend.vercel.app/api/auth/verify-token',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      }
+    )
       .then((res) => res.json())
       .then((data: any) => {
         if (data?.data !== true) {

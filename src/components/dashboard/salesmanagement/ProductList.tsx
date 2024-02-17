@@ -38,7 +38,6 @@ const ProductList = () => {
   const [customerEmail, setCustomerEmail] = useState<string>('');
   const [customerEmailToShow, setCustomerEmailToShow] = useState<string>('');
   const [customerPassword, setCustomerPassword] = useState<string>('');
-  const [customerBhp, setCustomerBhp] = useState<string>('0');
   const [appliedCoupon, setAppliedCoupon] = useState<string>('');
   const [searchedCustomerEmail, setSearchedCustomerEmail] =
     useState<string>('');

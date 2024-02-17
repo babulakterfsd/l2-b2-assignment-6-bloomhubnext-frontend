@@ -10,18 +10,17 @@ import { IoMdHome, IoMdLogOut } from 'react-icons/io';
 import { LiaSitemapSolid } from 'react-icons/lia';
 import { RxCross2 } from 'react-icons/rx';
 import { TbHistory } from 'react-icons/tb';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { toast } from 'sonner';
 import logo from '../../public/flowers.png';
 import Styles from '../styles/home.module.css';
 
 const DashboardLayout = () => {
+  const shopkeeperInfo = useAppSelector(useCurrentShopkeeper);
+  const { name, role } = shopkeeperInfo as TCurrentShopkeeper;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeDashboardRoute, setActiveDashboardRoute] = useState('');
   const dispatch = useAppDispatch();
-  const shopkeeperInfo = useAppSelector(useCurrentShopkeeper);
-  const { name, role } = shopkeeperInfo as TCurrentShopkeeper;
-  const location = useLocation();
 
   useEffect(() => {
     if (location.pathname === '/dashboard') {
@@ -32,6 +31,8 @@ const DashboardLayout = () => {
       setActiveDashboardRoute('sellsmanagement');
     } else if (location.pathname === '/dashboard/saleshistory') {
       setActiveDashboardRoute('sellshistory');
+    } else if (location.pathname === '/dashboard/customerdashboard') {
+      setActiveDashboardRoute('customerdashboard');
     }
   }, [location.pathname, dispatch, shopkeeperInfo]);
 
@@ -89,8 +90,16 @@ const DashboardLayout = () => {
       >
         <div className="h-screen px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
           <Link
-            to="/dashboard"
-            onClick={() => setActiveDashboardRoute('productmanagement')}
+            to={
+              role === 'customer'
+                ? '/dashboard/customerdashboard'
+                : '/dashboard'
+            }
+            onClick={() =>
+              role === 'customer'
+                ? setActiveDashboardRoute('customerdashboard')
+                : setActiveDashboardRoute('productmanagement')
+            }
           >
             <div
               className="flex justify-center items-center space-x-0 hover:cursor-pointer"
@@ -131,7 +140,28 @@ const DashboardLayout = () => {
               <li className="">{` ${name} (${role})`}</li>
             </Link>
             <hr className="mt-2 lg:hidden" />
-            <li>
+            {/* only for customers */}
+            <li className={`${role !== 'customer' ? 'hidden' : ''}`}>
+              <Link
+                to="/dashboard/customerdashboard"
+                className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-red-300 group ${
+                  activeDashboardRoute === 'customerdashboard'
+                    ? 'bg-red-300 text-white'
+                    : 'bg-none'
+                }`}
+                onClick={() => setActiveDashboardRoute('customerdashboard')}
+              >
+                <div
+                  className="flex items-center space-x-2"
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                >
+                  <LiaSitemapSolid />
+                  <span>Buy Products</span>
+                </div>
+              </Link>
+            </li>
+            {/* only for managers and sellers */}
+            <li className={`${role === 'customer' ? 'hidden' : ''}`}>
               <Link
                 to="/dashboard"
                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-red-300 group ${
@@ -150,7 +180,7 @@ const DashboardLayout = () => {
                 </div>
               </Link>
             </li>
-            <li className="lg:my-1">
+            <li className={`${role === 'customer' ? 'hidden' : 'lg:my-1'}`}>
               <Link
                 to="/dashboard/salesmanagement"
                 className={`flex items-center p-2  rounded-lg dark:text-white hover:bg-red-300 group ${
@@ -169,7 +199,7 @@ const DashboardLayout = () => {
                 </div>
               </Link>
             </li>
-            <li>
+            <li className={`${role === 'customer' ? 'hidden' : ''}`}>
               <Link
                 to="/dashboard/saleshistory"
                 className={`flex items-center p-2  rounded-lg dark:text-white hover:bg-red-300 group ${

@@ -28,14 +28,19 @@
 
 - Manager
 
-  - email:
-  - password:
+  - email: xpawal@gmail.com
+  - password: awal123
 
 - Seller
 
-  - email:
-  - password:
+  - email: babulakterfsd@gmail.com
+  - password: babul123
 
 - Customer
-  - email:
-  - password:
+
+  - email: belayet@gmail.com
+  - password: belayet123
+
+  ##### COUPON CODE TO GET DISCOUNT
+
+  - use code 'eid2024' to get 8% discount
