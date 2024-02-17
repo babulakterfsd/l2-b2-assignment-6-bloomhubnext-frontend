@@ -10,7 +10,7 @@ const sellApi = baseApi.injectEndpoints({
           body: productToBeSoldData,
         };
       },
-      invalidatesTags: ['products', 'product', 'sells'],
+      invalidatesTags: ['products', 'product', 'sells', 'shopkeeper'],
     }),
     getAllSoldProducts: builder.query({
       query: (timeframe) => {

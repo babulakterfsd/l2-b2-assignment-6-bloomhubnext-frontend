@@ -45,7 +45,7 @@ const AllProductsContainer = () => {
       if (role === 'customer') {
         try {
           const response = await fetch(
-            'http://localhost:5000/api/auth/logout',
+            'https://bloomhub-assignment6-backend.vercel.app/api/auth/logout',
             {
               method: 'POST',
               credentials: 'include',
