@@ -8,8 +8,11 @@ import {
   useCreateProductMutation,
   useGetSingleProductQuery,
 } from '@/redux/api/productApi';
-import { useCurrentShopkeeper } from '@/redux/features/authSlice';
-import { useAppSelector } from '@/redux/hook';
+import {
+  setShopkeeperInLocalState,
+  useCurrentShopkeeper,
+} from '@/redux/features/authSlice';
+import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { TShopkeeper } from '@/types/commonTypes';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -40,6 +43,45 @@ const CreateVariant = () => {
   const { _id, email, role } = shopkeeper as TShopkeeper;
   const [createProduct] = useCreateProductMutation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const logout = async () => {
+      if (role === 'customer') {
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/auth/logout',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            dispatch(
+              setShopkeeperInLocalState({
+                shopkeeper: null,
+                token: null,
+              })
+            );
+            navigate('/login');
+          } else {
+            toast.error('Something went wrong', {
+              position: 'top-right',
+              duration: 1500,
+            });
+          }
+        } catch (error) {
+          console.error('Something went wrong', error);
+        }
+      }
+    };
+
+    logout();
+  }, [role, navigate]);
 
   useEffect(() => {
     setName(mainProduct?.name);

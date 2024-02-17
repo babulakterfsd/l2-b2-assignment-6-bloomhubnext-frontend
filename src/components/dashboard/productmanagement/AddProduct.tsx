@@ -35,16 +35,42 @@ const AddProduct = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (role === 'customer') {
-      dispatch(
-        setShopkeeperInLocalState({
-          shopkeeper: null,
-          token: null,
-        })
-      );
-      navigate('/login');
-    }
-  }, [location.pathname, role, navigate]);
+    const logout = async () => {
+      if (role === 'customer') {
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/auth/logout',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            dispatch(
+              setShopkeeperInLocalState({
+                shopkeeper: null,
+                token: null,
+              })
+            );
+            navigate('/login');
+          } else {
+            toast.error('Something went wrong', {
+              position: 'top-right',
+              duration: 1500,
+            });
+          }
+        } catch (error) {
+          console.error('Something went wrong', error);
+        }
+      }
+    };
+
+    logout();
+  }, [role, navigate]);
 
   const handleColorChange = (selectedColors: any) => {
     const selectedColorValues = selectedColors.map((color: any) => color.value);

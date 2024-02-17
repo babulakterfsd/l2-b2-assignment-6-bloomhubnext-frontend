@@ -3,8 +3,11 @@ import {
   useDeleteProductMutation,
   useGetProductsQuery,
 } from '@/redux/api/productApi';
-import { useCurrentShopkeeper } from '@/redux/features/authSlice';
-import { useAppSelector } from '@/redux/hook';
+import {
+  setShopkeeperInLocalState,
+  useCurrentShopkeeper,
+} from '@/redux/features/authSlice';
+import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { TCurrentShopkeeper, TProduct } from '@/types/commonTypes';
 import { useEffect, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
@@ -13,7 +16,7 @@ import { IoIosAddCircleOutline } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
 import { TbDatabaseEdit } from 'react-icons/tb';
 import { TfiFilter } from 'react-icons/tfi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const AllProductsContainer = () => {
@@ -33,6 +36,47 @@ const AllProductsContainer = () => {
   const [isMultipleDeleteActive, setIsMultipleDeleteActive] = useState(false);
   const shopkeeper = useAppSelector(useCurrentShopkeeper);
   const { role } = shopkeeper as TCurrentShopkeeper;
+
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const logout = async () => {
+      if (role === 'customer') {
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/auth/logout',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            dispatch(
+              setShopkeeperInLocalState({
+                shopkeeper: null,
+                token: null,
+              })
+            );
+            navigate('/login');
+          } else {
+            toast.error('Something went wrong', {
+              position: 'top-right',
+              duration: 1500,
+            });
+          }
+        } catch (error) {
+          console.error('Something went wrong', error);
+        }
+      }
+    };
+
+    logout();
+  }, [role, navigate]);
 
   useEffect(() => {
     if (deleteContainer.length > 0) {

@@ -5,25 +5,51 @@ import {
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { TShopkeeper } from '@/types/commonTypes';
 import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const CustomerDashboard = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
   const currentCustomer = useAppSelector(useCurrentShopkeeper) as TShopkeeper;
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (currentCustomer?.role !== 'customer') {
-      dispatch(
-        setShopkeeperInLocalState({
-          shopkeeper: null,
-          token: null,
-        })
-      );
-      navigate('/login');
-    }
-  }, [location.pathname, currentCustomer?.role, navigate]);
+    const logout = async () => {
+      if (currentCustomer?.role !== 'customer') {
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/auth/logout',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            dispatch(
+              setShopkeeperInLocalState({
+                shopkeeper: null,
+                token: null,
+              })
+            );
+            navigate('/login');
+          } else {
+            toast.error('Something went wrong', {
+              position: 'top-right',
+              duration: 1500,
+            });
+          }
+        } catch (error) {
+          console.error('Something went wrong', error);
+        }
+      }
+    };
+
+    logout();
+  }, [currentCustomer?.role, navigate]);
 
   return (
     <div>

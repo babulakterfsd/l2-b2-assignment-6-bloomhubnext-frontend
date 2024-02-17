@@ -1,6 +1,58 @@
+import {
+  setShopkeeperInLocalState,
+  useCurrentShopkeeper,
+} from '@/redux/features/authSlice';
+import { useAppDispatch, useAppSelector } from '@/redux/hook';
+import { TShopkeeper } from '@/types/commonTypes';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import ProductList from './ProductList';
 
 const SalesManagement = () => {
+  const shopkeeper = useAppSelector(useCurrentShopkeeper);
+  const { role } = shopkeeper as TShopkeeper;
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const logout = async () => {
+      if (role === 'customer') {
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/auth/logout',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            dispatch(
+              setShopkeeperInLocalState({
+                shopkeeper: null,
+                token: null,
+              })
+            );
+            navigate('/login');
+          } else {
+            toast.error('Something went wrong', {
+              position: 'top-right',
+              duration: 1500,
+            });
+          }
+        } catch (error) {
+          console.error('Something went wrong', error);
+        }
+      }
+    };
+
+    logout();
+  }, [role, navigate]);
+
   return (
     <div>
       <h3 className="text-center lg:mt-8 text-2xl font-semibold">

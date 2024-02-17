@@ -8,15 +8,19 @@ import {
 } from '@/redux/api/couponApi';
 import { useGetProductsQuery } from '@/redux/api/productApi';
 import { useSellAProductMutation } from '@/redux/api/sellApi';
-import { useCurrentShopkeeper } from '@/redux/features/authSlice';
-import { useAppSelector } from '@/redux/hook';
+import {
+  setShopkeeperInLocalState,
+  useCurrentShopkeeper,
+} from '@/redux/features/authSlice';
+import { useAppDispatch, useAppSelector } from '@/redux/hook';
 import { TCoupon, TProduct, TShopkeeper } from '@/types/commonTypes';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Marquee from 'react-fast-marquee';
 import { FaHandHoldingUsd } from 'react-icons/fa';
 import { GiFlowerPot } from 'react-icons/gi';
 import { IoIosAddCircleOutline } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const ProductList = () => {
@@ -56,6 +60,49 @@ const ProductList = () => {
   const [sellAProduct, { isLoading: sellProductOngoing }] =
     useSellAProductMutation();
   const [checkCustomerExistance] = useCheckCustomerExistanceMutation();
+
+  const shopkeeper = useAppSelector(useCurrentShopkeeper);
+  const { role } = shopkeeper as TShopkeeper;
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const logout = async () => {
+      if (role === 'customer') {
+        try {
+          const response = await fetch(
+            'http://localhost:5000/api/auth/logout',
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            dispatch(
+              setShopkeeperInLocalState({
+                shopkeeper: null,
+                token: null,
+              })
+            );
+            navigate('/login');
+          } else {
+            toast.error('Something went wrong', {
+              position: 'top-right',
+              duration: 1500,
+            });
+          }
+        } catch (error) {
+          console.error('Something went wrong', error);
+        }
+      }
+    };
+
+    logout();
+  }, [role, navigate]);
 
   const checkIfCustomerExists = async (e: any) => {
     e.preventDefault();
