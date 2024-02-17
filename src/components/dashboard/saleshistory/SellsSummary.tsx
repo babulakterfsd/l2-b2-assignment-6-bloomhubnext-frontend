@@ -212,7 +212,7 @@ const SellsSummary = () => {
                             {`$${soldProduct?.discountGiven}`}
                           </td>
                           <td className="px-6 py-4 font-semibold">
-                            {`$${soldProduct?.totalBill}`}
+                            {`$${(soldProduct?.totalBill).toFixed(2)}`}
                           </td>
                         </tr>
                       )
