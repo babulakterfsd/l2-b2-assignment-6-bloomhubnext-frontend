@@ -67,7 +67,7 @@ const Signup = () => {
             })
           );
           setTimeout(() => {
-            navigate('/dashboard');
+            navigate('/dashboard/profile');
           }, 500);
         }
       } else {

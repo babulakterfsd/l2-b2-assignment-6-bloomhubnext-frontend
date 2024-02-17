@@ -24,7 +24,7 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     if (location.pathname === '/dashboard') {
-      setActiveDashboardRoute('productmanagement');
+      setActiveDashboardRoute('profile');
     } else if (location.pathname === '/dashboard/profile') {
       setActiveDashboardRoute('profile');
     } else if (location.pathname === '/dashboard/salesmanagement') {
@@ -33,6 +33,8 @@ const DashboardLayout = () => {
       setActiveDashboardRoute('sellshistory');
     } else if (location.pathname === '/dashboard/customerdashboard') {
       setActiveDashboardRoute('customerdashboard');
+    } else if (location.pathname === '/dashboard/productmanagement') {
+      setActiveDashboardRoute('productmanagement');
     }
   }, [location.pathname, dispatch, shopkeeperInfo]);
 
@@ -163,7 +165,7 @@ const DashboardLayout = () => {
             {/* only for managers and sellers */}
             <li className={`${role === 'customer' ? 'hidden' : ''}`}>
               <Link
-                to="/dashboard"
+                to="/dashboard/productmanagement"
                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-red-300 group ${
                   activeDashboardRoute === 'productmanagement'
                     ? 'bg-red-300 text-white'

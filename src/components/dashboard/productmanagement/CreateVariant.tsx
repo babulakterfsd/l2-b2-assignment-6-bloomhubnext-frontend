@@ -87,7 +87,7 @@ const CreateVariant = () => {
           duration: 2500,
         }
       );
-      navigate('/dashboard');
+      navigate('/dashboard/productmanagement');
       return;
     }
 
@@ -139,7 +139,7 @@ const CreateVariant = () => {
         setIsDiscountRunning('false');
 
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/dashboard/productmanagement');
         }, 500);
       } else {
         toast.error(response?.data?.errorMessage, {

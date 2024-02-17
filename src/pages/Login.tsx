@@ -66,14 +66,7 @@ const Login = () => {
           })
         );
         setTimeout(() => {
-          if (shopkeeperFromDB?.role === 'customer') {
-            navigate('/dashboard/profile');
-          } else if (
-            shopkeeperFromDB?.role === 'manager' ||
-            shopkeeperFromDB?.role === 'seller'
-          ) {
-            navigate('/dashboard');
-          }
+          navigate('/dashboard/profile');
         }, 500);
       }
     }

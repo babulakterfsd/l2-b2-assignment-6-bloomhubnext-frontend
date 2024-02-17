@@ -10,12 +10,13 @@ import SalesManagement from '@/components/dashboard/salesmanagement/SalesManagem
 import NotFound from '@/pages/NotFound';
 
 export const dashboardRoutePaths = [
-  { index: true, element: <ProductManagement /> },
+  { index: true, element: <Profile /> },
   { path: 'profile', element: <Profile /> },
-  { path: 'customerdashboard', element: <CustomerDashboard /> },
+  { path: 'productmanagement', element: <ProductManagement /> },
   { path: 'productmanagement/addproduct', element: <AddProduct /> },
-  { path: 'productmanagement/createvariant/:id', element: <CreateVariant /> },
   { path: 'productmanagement/updateproduct/:id', element: <UpdateProduct /> },
+  { path: 'productmanagement/createvariant/:id', element: <CreateVariant /> },
+  { path: 'customerdashboard', element: <CustomerDashboard /> },
   { path: 'salesmanagement', element: <SalesManagement /> },
   { path: 'saleshistory', element: <SalesHistoryManagement /> },
   { path: '*', element: <NotFound /> },

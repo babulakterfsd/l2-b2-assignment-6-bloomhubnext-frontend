@@ -75,7 +75,7 @@ const AddProduct = () => {
         position: 'top-right',
         duration: 2500,
       });
-      navigate('/dashboard');
+      navigate('/dashboard/productmanagement');
       return;
     }
 
@@ -127,7 +127,7 @@ const AddProduct = () => {
         setIsDiscountRunning('false');
 
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/dashboard/productmanagement');
         }, 500);
       } else {
         toast.error(response?.data?.errorMessage, {

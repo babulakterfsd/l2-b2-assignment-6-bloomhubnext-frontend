@@ -206,7 +206,7 @@ const AllProductsContainer = () => {
     <div className="mb-10 lg:mb-24 lg:mt-16 lg:shadow-md lg:rounded-md lg:py-5 lg:px-6 lg:pb-8">
       {/* header functionalities */}
       <div className="flex flex-col space-y-3 lg:flex-row justify-between items-center">
-        <Link to="productmanagement/addproduct">
+        <Link to="addproduct">
           <div className="bg-red-300 rounded-md px-4 py-2 cursor-pointer text-white hover:bg-red-400 transition-colors duration-300 ease-in-out flex items-center space-x-2 mt-3">
             <IoIosAddCircleOutline style={{ fontSize: '18px' }} />{' '}
             <span>Add Product</span>
@@ -655,9 +655,7 @@ const AllProductsContainer = () => {
                       <td className="px-6 py-4">{product.sizes.join(', ')}</td>
                       <td className="px-6 py-4">{product.fragrance}</td>
                       <td className="px-6 py-4 flex space-x-4 justify-center items-center mt-5">
-                        <Link
-                          to={`productmanagement/updateproduct/${product?._id}`}
-                        >
+                        <Link to={`updateproduct/${product?._id}`}>
                           <button className="text-xl" title="update product">
                             <CiEdit />
                           </button>
@@ -669,9 +667,7 @@ const AllProductsContainer = () => {
                         >
                           <AiOutlineDelete />
                         </button>
-                        <Link
-                          to={`productmanagement/createvariant/${product?._id}`}
-                        >
+                        <Link to={`createvariant/${product?._id}`}>
                           <button className="text-xl" title="create variant">
                             <TbDatabaseEdit />
                           </button>
